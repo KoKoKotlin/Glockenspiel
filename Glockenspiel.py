@@ -1,0 +1,153 @@
+import RPi.GPIO as GPIO
+
+import curses
+
+from time import sleep
+from statistics import median
+
+import threading
+
+def find_note_minimum(track, channel):
+    return median(
+        map(lambda x: x.note, 
+            filter(lambda x: not x.is_meta and x.type == "note_on" and (channel == None or channel != None and x.channel == channel), 
+            track)
+        )
+    )
+
+def get_note_offset(track, channel):
+    min_note = find_note_minimum(track, channel)
+    multiple_of_twelve = int((min_note - 7) / 12)
+    
+    return multiple_of_twelve * 12 + 7
+
+class Glockenspiel:
+    
+    # PIN out for differebt tones
+    # 1st octave
+    G1      = 13
+    G1_S    = 6
+    A1      = 19
+    A1_S    = 3
+    B1      = 26
+    # 2nd octave
+    C2      = 14
+    C2_S    = 4
+    D2      = 15
+    D2_S    = 9
+    E2      = 18
+    F2      = 23
+    F2_S    = 17
+    G2      = 24
+    G2_S    = 27
+    A2      = 25
+    A2_S    = 22
+    B2      = 8
+    # 3rd ocvtave
+    C3      = 7
+    C3_S    = 10
+    D3      = 12
+    D3_S    = 5
+    E3      = 16
+    F3      = 20
+    F3_S    = 11
+    G3      = 21
+    # ------------
+
+    note_array = [
+        # 1st octave
+        (G1, 0.02), (G1_S, 0.02), (A1, 0.02), (A1_S, 0.02), (B1, 0.02), 
+        # 2nd octave
+        (C2, 0.02), (C2_S, 0.02), (D2, 0.02), (D2_S, 0.02), (E2, 0.02), (F2, 0.02), (F2_S, 0.02), (G2, 0.02), (G2_S, 0.02), (A2, 0.02), (A2_S, 0.02), (B2, 0.02), 
+        # 3rd ocvtave
+        (C3, 0.02), (C3_S, 0.02), (D3, 0.02), (D3_S, 0.02), (E3, 0.02), (F3, 0.02), (F3_S, 0.02), (G3, 0.02)
+    ]
+
+    # when played together play with longer duration for the same velocity
+    connected_notes = [
+        (G1, A1, B1),
+        (C2, D2, E2),
+        (F2, G2, A2),
+        (B2, C3, D3),
+        (E2, F2, G3),
+        (G1_S, A1_S, C2_S),
+        (D2_S, F2_S, G2_S),
+        (A2_S, C3_S, D3_S, F3_S),
+    ]
+
+    # for manuel mode
+    keys = [
+        "a", "w", "s", "e", "d",
+        "f", "t", "g", "z", "h", "j", "i", "k", "o", "l", "p", "y", 
+        "x", "c", "v", "b", "n", "m", ",", "."
+    ]
+
+
+    # for manuel mode
+    NOTE_COOLDOWN = 0.02
+
+    def __init__(self, midi=None, channel=None):
+        self.last_note = 0
+        self.midi = midi
+        self.channel = channel
+
+        if self.midi != None:
+            self.offset = get_note_offset(self.midi, self.channel)
+
+    def init(self):
+        # enable gpio pins
+        GPIO.setmode(GPIO.BCM)
+
+        for i in range(1, 28):
+            GPIO.setup(i, GPIO.OUT)
+            sleep(0.02)
+            GPIO.output(i, GPIO.HIGH)
+
+    def playSong(self):
+        for event in self.midi.play():
+            if not event.is_meta:
+                if event.type == "note_on":
+                    if self.channel == None or self.channel != None and event.channel == self.channel:
+                        self.playNote(event.note, shift=True)
+
+    def getPinFromNoteId(self, note_id):
+        pin = note_id - self.offset
+
+        while pin < 0:
+            pin += 12
+
+        return self.note_array[pin]
+
+    def playNote(self, note_id, shift=True):
+        def playNote_(node_id):
+            try:
+                pin = duration = 0
+                if shift:
+                    pin, duration = self.getPinFromNoteId(note_id)
+                else:
+                    pin, duration = self.note_array[note_id]
+                
+                GPIO.output(pin, GPIO.LOW)
+                sleep(duration)
+                GPIO.output(pin, GPIO.HIGH)
+                sleep(duration)
+
+            except Exception as e: print("In play note:", e)
+        
+        t = threading.Thread(target=playNote_, args=(note_id, ))
+        t.start()
+
+    def manuel_mode(self):
+        def get_press(stdscr):
+            stdscr.nodelay(True)
+            return stdscr.getch()
+
+        while True:
+            key = curses.wrapper(get_press)
+            if key != -1:
+                key = chr(key)
+                try:
+                    playNote(keys.index(key), shift=False)
+                except: continue
+            sleep(self.NOTE_COOLDOWN)
+
