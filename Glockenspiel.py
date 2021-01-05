@@ -93,6 +93,10 @@ class Glockenspiel:
 
         if self.midi != None:
             self.offset = get_note_offset(self.midi, self.channel)
+        
+        self.note_queue = []
+        self.working = False
+        self.song_thread = None
 
     def init(self):
         # enable gpio pins
@@ -103,12 +107,39 @@ class Glockenspiel:
             sleep(0.02)
             GPIO.output(i, GPIO.HIGH)
 
+    def start_worker():
+        def playNote(node_id):
+            try:
+                pin, duration = self.getPinFromNoteId(note_id)                
+                GPIO.output(pin, GPIO.LOW)
+                sleep(duration)
+                GPIO.output(pin, GPIO.HIGH)
+                sleep(duration)
+
+            except Exception as e: print("In play note:", e)
+        
+        def work_queue():
+            while self.working:
+                if len(queue) != 0:
+                    note_id = queue.pop()
+                    playNote(note_id)
+
+        self.working = True
+        self.song_thread = threading.Thread(target=work_queue)
+
+    def stop_worker():
+        self.working = False
+
     def playSong(self):
+        if !self.working:
+            print("Not started yet!")
+            return
+
         for event in self.midi.play():
             if not event.is_meta:
                 if event.type == "note_on":
                     if self.channel == None or self.channel != None and event.channel == self.channel:
-                        self.playNote(event.note, shift=True)
+                        self.note_queue.append(event.note)
 
     def getPinFromNoteId(self, note_id):
         pin = note_id - self.offset
@@ -118,36 +149,20 @@ class Glockenspiel:
 
         return self.note_array[pin]
 
-    def playNote(self, note_id, shift=True):
-        def playNote_(node_id):
-            try:
-                pin = duration = 0
-                if shift:
-                    pin, duration = self.getPinFromNoteId(note_id)
-                else:
-                    pin, duration = self.note_array[note_id]
-                
-                GPIO.output(pin, GPIO.LOW)
-                sleep(duration)
-                GPIO.output(pin, GPIO.HIGH)
-                sleep(duration)
-
-            except Exception as e: print("In play note:", e)
-        
-        t = threading.Thread(target=playNote_, args=(note_id, ))
-        t.start()
-
     def manuel_mode(self):
         def get_press(stdscr):
             stdscr.nodelay(True)
             return stdscr.getch()
-
+        
+        if !self.working:
+            print("Not started yet!")
+            return
+        
         while True:
             key = curses.wrapper(get_press)
             if key != -1:
                 key = chr(key)
                 try:
-                    playNote(keys.index(key), shift=False)
+                    self.note_queue.append(keys.index(key))
                 except: continue
             sleep(self.NOTE_COOLDOWN)
-

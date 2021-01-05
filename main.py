@@ -10,6 +10,7 @@ def main():
     if len(sys.argv) == 1:
         gl = Glockenspiel()
         gl.init()
+        gl.start_worker()
         gl.manuel_mode()
     else:
         fileName = sys.argv[1]
@@ -21,7 +22,9 @@ def main():
         midi = mido.MidiFile(fileName)
         gl = Glockenspiel(midi, channel)
         gl.init()
+        gl.start_worker()
         gl.playSong()
+        gl.stop_worker()
 
 if __name__ == "__main__":
     try:
