@@ -126,7 +126,7 @@ class Glockenspiel:
 
                     delta = time.time() - event_time
                     if delta >= delay:
-                        GPIO.output(pin, state)
+                        GPIO.output(pin, GPIO.HIGH)
                         to_remove.append(i)
 
                 for i in reversed(to_remove):
@@ -161,12 +161,13 @@ class Glockenspiel:
                     if self.channel == None or \
                        self.channel != None and event.channel == self.channel:
                         
+                        # set pin low immediately
                         pin = self.getPinFromNoteId(event.note)
+                        GPIO.output(pin, GPIO.LOW)
+                        
+                        # schedule setting the pin high again
                         duration = self.durations[pin]
-                        # event for setting the note to low
-                        self.note_queue.append((time.time(), 0, pin, GPIO.LOW)) 
-                        # event for setting the note to high
-                        self.note_queue.append((time.time(), duration, pin, GPIO.HIGH))
+                        self.note_queue.append((time.time(), duration, pin))
     
     def getPinFromNoteId(self, note_id):
         pin = note_id - self.offset
