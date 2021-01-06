@@ -116,18 +116,18 @@ class Glockenspiel:
             sleep(0.02)
             GPIO.output(i, GPIO.HIGH)
         
-        def work_queue():
-            while self.working:
-                to_remove = []
-                for i, event in enumerate(self.note_queue.copy()):
-                    event_time, delay, pin, state = event
+    def work_queue():
+        while self.working:
+            to_remove = []
+            for i, event in enumerate(self.note_queue.copy()):
+                event_time, delay, pin, state = event
 
-                    if event_time - time.time() <= delay:
-                        GPIO.output(pin, state)
-                        to_remove.append(i)
-                
-                for i in to_remove:
-                    self.note_queue.pop(i)
+                if event_time - time.time() <= delay:
+                    GPIO.output(pin, state)
+                    to_remove.append(i)
+            
+            for i in to_remove:
+                self.note_queue.pop(i)
         
         self.working = True
         self.song_thread = threading.Thread(target=work_queue)
