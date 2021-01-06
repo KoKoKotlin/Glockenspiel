@@ -138,7 +138,7 @@ class Glockenspiel:
         self.song_thread = threading.Thread(target=work_queue)
         self.song_thread.start()
 
-    def stop_worker():
+    def stop_worker(self):
         self.working = False
 
     def playSong(self):
@@ -146,7 +146,7 @@ class Glockenspiel:
             print("Not started yet!")
             return
 
-        start_time = time.time() - 1
+        start_time = time.time()
         input_time = 0.0
 
         for event in self.midi:
