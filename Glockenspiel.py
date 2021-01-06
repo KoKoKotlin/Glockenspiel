@@ -3,6 +3,7 @@ import RPi.GPIO as GPIO
 import curses
 
 from time import sleep
+import time
 from statistics import median
 
 import threading
