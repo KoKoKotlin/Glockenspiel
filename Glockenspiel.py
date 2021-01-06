@@ -164,7 +164,7 @@ class Glockenspiel:
                         # event for setting the note to low
                         self.note_queue.append((time.time(), 0, pin, GPIO.LOW)) 
                         # event for setting the note to high
-                        self.note_queue.appent((time.time(), durations, pin, GPIO.HIGH))
+                        self.note_queue.append((time.time(), durations, pin, GPIO.HIGH))
     
     def getPinFromNoteId(self, note_id):
         pin = note_id - self.offset
