@@ -126,11 +126,9 @@ class Glockenspiel:
 
                     delta = time.time() - event_time
                     if delta >= delay:
-                        print("Played: ")
                         GPIO.output(pin, state)
                         to_remove.append(i)
 
-                    print(event, delta)
                 for i in reversed(to_remove):
                     del self.note_queue[i]
         
