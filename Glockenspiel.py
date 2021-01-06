@@ -145,8 +145,8 @@ class Glockenspiel:
         start_time = time.time()
         input_time = 0.0
 
-        for msg in self.midi:
-            input_time += msg.time
+        for event in self.midi:
+            input_time += event.time
 
             playback_time = time.time() - start_time
             duration_to_next_event = input_time - playback_time
@@ -159,7 +159,7 @@ class Glockenspiel:
                     if self.channel == None or \
                        self.channel != None and event.channel == self.channel:
                         
-                        pin = self.getPinFromNoteId(note_id)
+                        pin = self.getPinFromNoteId(event.note)
                         duration = durations[pin]
                         # event for setting the note to low
                         self.note_queue.append((time.time(), 0, pin, GPIO.LOW)) 
