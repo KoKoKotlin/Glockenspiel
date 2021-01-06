@@ -56,12 +56,21 @@ class Glockenspiel:
 
     note_array = [
         # 1st octave
-        (G1, 0.02), (G1_S, 0.02), (A1, 0.02), (A1_S, 0.02), (B1, 0.02), 
+        G1, G1_S, A1, A1_S, B1, 
         # 2nd octave
-        (C2, 0.02), (C2_S, 0.02), (D2, 0.02), (D2_S, 0.02), (E2, 0.02), (F2, 0.02), (F2_S, 0.02), (G2, 0.02), (G2_S, 0.02), (A2, 0.02), (A2_S, 0.02), (B2, 0.02), 
+        C2, C2_S, D2, D2_S, E2, F2, F2_S, G2, G2_S, A2, A2_S, B2, 
         # 3rd ocvtave
-        (C3, 0.02), (C3_S, 0.02), (D3, 0.02), (D3_S, 0.02), (E3, 0.02), (F3, 0.02), (F3_S, 0.02), (G3, 0.02)
+        C3, C3_S, D3, D3_S, E3, F3, F3_S, G3
     ]
+    
+    durations = {
+        # 1st octave
+        G1: 0.02, G1_S: 0.02, A1: 0.02, A1_S: 0.02, B1: 0.02, 
+        # 2nd octave
+        C2: 0.02, C2_S: 0.02, D2: 0.02, D2_S: 0.02, E2: 0.02, F2: 0.02, F2_S: 0.02, G2: 0.02, G2_S: 0.02, A2: 0.02, A2_S: 0.02, B2: 0.02, 
+        # 3rd ocvtave
+        C3: 0.02, C3_S: 0.02, D3: 0.02, D3_S: 0.02, E3: 0.02, F3: 0.02, F3_S: 0.02, G3: 0.02
+    }
 
     # when played together play with longer duration for the same velocity
     connected_notes = [
@@ -106,24 +115,20 @@ class Glockenspiel:
             GPIO.setup(i, GPIO.OUT)
             sleep(0.02)
             GPIO.output(i, GPIO.HIGH)
-
-    def start_worker():
-        def playNote(node_id):
-            try:
-                pin, duration = self.getPinFromNoteId(note_id)                
-                GPIO.output(pin, GPIO.LOW)
-                sleep(duration)
-                GPIO.output(pin, GPIO.HIGH)
-                sleep(duration)
-
-            except Exception as e: print("In play note:", e)
         
         def work_queue():
             while self.working:
-                if len(queue) != 0:
-                    note_id = queue.pop()
-                    playNote(note_id)
+                to_remove = []
+                for i, event in enumerate(self.note_queue.copy()):
+                    event_time, delay, pin, state = event
 
+                    if event_time - time.time() <= delay:
+                        GPIO.output(pin, state)
+                        to_remove.append(i)
+                
+                for i in to_remove:
+                    self.note_queue.pop(i)
+        
         self.working = True
         self.song_thread = threading.Thread(target=work_queue)
 
@@ -135,12 +140,30 @@ class Glockenspiel:
             print("Not started yet!")
             return
 
-        for event in self.midi.play():
+        start_time = time.time()
+        input_time = 0.0
+
+        for msg in self.midi:
+            input_time += msg.time
+
+            playback_time = time.time() - start_time
+            duration_to_next_event = input_time - playback_time
+
+            if duration_to_next_event > 0.0:
+                time.sleep(duration_to_next_event)
+
             if not event.is_meta:
                 if event.type == "note_on":
-                    if self.channel == None or self.channel != None and event.channel == self.channel:
-                        self.note_queue.append(event.note)
-
+                    if self.channel == None or \
+                       self.channel != None and event.channel == self.channel:
+                        
+                        pin = self.getPinFromNoteId(note_id)
+                        duration = durations[pin]
+                        # event for setting the note to low
+                        self.note_queue.append((time.time(), 0, pin, GPIO.LOW)) 
+                        # event for setting the note to low -> FIXME: instead of note_cooldown get duration
+                        self.note_queue.appent((time.time(), durations, pin, GPIO.HIGH))
+    
     def getPinFromNoteId(self, note_id):
         pin = note_id - self.offset
 
