@@ -169,6 +169,9 @@ class Glockenspiel:
 
         while pin < 0:
             pin += 12
+        
+        while pin >= 25:
+            pin -= 12
 
         return self.note_array[pin]
 
