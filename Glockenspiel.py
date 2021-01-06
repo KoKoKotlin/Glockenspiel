@@ -136,7 +136,7 @@ class Glockenspiel:
         self.working = False
 
     def playSong(self):
-        if !self.working:
+        if not self.working:
             print("Not started yet!")
             return
 
@@ -180,7 +180,7 @@ class Glockenspiel:
             stdscr.nodelay(True)
             return stdscr.getch()
         
-        if !self.working:
+        if not self.working:
             print("Not started yet!")
             return
         
