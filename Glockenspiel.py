@@ -129,7 +129,7 @@ class Glockenspiel:
                         to_remove.append(i)
                 
                 for i in to_remove:
-                    self.note_queue.remove(i)
+                    del self.note_queue[i]
         
         self.working = True
         self.song_thread = threading.Thread(target=work_queue)
