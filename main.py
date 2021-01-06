@@ -19,8 +19,12 @@ def main():
         if len(sys.argv) == 3:
             channel = int(sys.argv[2])
 
+        offset = None
+        if len(sys.argv) > 3:
+            offset = int(sys.argv[3])
+
         midi = mido.MidiFile(fileName)
-        gl = Glockenspiel(midi, channel)
+        gl = Glockenspiel(midi, channel, offset)
         gl.init()
         gl.start_worker()
         gl.playSong()

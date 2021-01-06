@@ -96,14 +96,16 @@ class Glockenspiel:
     # for manuel mode
     NOTE_COOLDOWN = 0.02
 
-    def __init__(self, midi=None, channel=None):
+    def __init__(self, midi=None, channel=None, offset=None):
         self.last_note = 0
         self.midi = midi
         self.channel = channel
 
-        if self.midi != None:
+        if self.midi != None ans offset == None:
             self.offset = get_note_offset(self.midi, self.channel)
-        
+        else:
+            self.offset = offset
+
         self.note_queue = []
         self.working = False
         self.song_thread = None
