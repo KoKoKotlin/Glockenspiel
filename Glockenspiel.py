@@ -160,7 +160,7 @@ class Glockenspiel:
                        self.channel != None and event.channel == self.channel:
                         
                         pin = self.getPinFromNoteId(event.note)
-                        duration = durations[pin]
+                        duration = self.durations[pin]
                         # event for setting the note to low
                         self.note_queue.append((time.time(), 0, pin, GPIO.LOW)) 
                         # event for setting the note to high
