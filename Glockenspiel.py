@@ -116,7 +116,7 @@ class Glockenspiel:
             sleep(0.02)
             GPIO.output(i, GPIO.HIGH)
 
-    def start_worker():
+    def start_worker(self):
         def work_queue():
             while self.working:
                 to_remove = []
