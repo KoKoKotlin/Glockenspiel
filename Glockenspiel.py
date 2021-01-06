@@ -68,7 +68,7 @@ class Glockenspiel:
         # 1st octave
         G1: 0.02, G1_S: 0.02, A1: 0.02, A1_S: 0.02, B1: 0.02, 
         # 2nd octave
-        C2: 0.02, C2_S: 0.02, D2: 0.02, D2_S: 0.02, E2: 0.02, F2: 0.02, F2_S: 0.02, G2: 0.02, G2_S: 0.02, A2: 0.02, A2_S: 0.02, B2: 0.02, 
+        C2: 0.03, C2_S: 0.02, D2: 0.02, D2_S: 0.02, E2: 0.02, F2: 0.02, F2_S: 0.02, G2: 0.02, G2_S: 0.02, A2: 0.03, A2_S: 0.02, B2: 0.02, 
         # 3rd ocvtave
         C3: 0.02, C3_S: 0.02, D3: 0.02, D3_S: 0.02, E3: 0.02, F3: 0.02, F3_S: 0.02, G3: 0.02
     }
@@ -144,7 +144,7 @@ class Glockenspiel:
             print("Not started yet!")
             return
 
-        start_time = time.time()
+        start_time = time.time() - 1
         input_time = 0.0
 
         for event in self.midi:
