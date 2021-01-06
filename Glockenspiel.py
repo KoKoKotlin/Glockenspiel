@@ -128,7 +128,8 @@ class Glockenspiel:
                         GPIO.output(pin, state)
                         to_remove.append(i)
                 
-                for i in to_remove:
+                for i in reversed(to_remove):
+                    print(len(self.note_queue), i)
                     del self.note_queue[i]
         
         self.working = True
