@@ -101,7 +101,7 @@ class Glockenspiel:
         self.midi = midi
         self.channel = channel
 
-        if self.midi != None ans offset == None:
+        if self.midi != None and offset == None:
             self.offset = get_note_offset(self.midi, self.channel)
         else:
             self.offset = offset
