@@ -122,7 +122,7 @@ class Glockenspiel:
             while self.working:
                 to_remove = []
                 for i, event in enumerate(self.note_queue):
-                    event_time, delay, pin, state = event
+                    event_time, delay, pin = event
 
                     delta = time.time() - event_time
                     if delta >= delay:
