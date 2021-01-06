@@ -161,7 +161,7 @@ class Glockenspiel:
                         duration = durations[pin]
                         # event for setting the note to low
                         self.note_queue.append((time.time(), 0, pin, GPIO.LOW)) 
-                        # event for setting the note to low -> FIXME: instead of note_cooldown get duration
+                        # event for setting the note to high
                         self.note_queue.appent((time.time(), durations, pin, GPIO.HIGH))
     
     def getPinFromNoteId(self, note_id):
