@@ -121,7 +121,7 @@ class Glockenspiel:
         def work_queue():
             while self.working:
                 to_remove = []
-                for i, event in enumerate(self.note_queue.copy()):
+                for i, event in enumerate(self.note_queue):
                     event_time, delay, pin, state = event
 
                     if event_time - time.time() <= delay:
@@ -133,6 +133,7 @@ class Glockenspiel:
         
         self.working = True
         self.song_thread = threading.Thread(target=work_queue)
+        self.song_thread.start()
 
     def stop_worker():
         self.working = False
