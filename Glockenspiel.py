@@ -124,12 +124,11 @@ class Glockenspiel:
                 for i, event in enumerate(self.note_queue):
                     event_time, delay, pin, state = event
 
-                    if event_time - time.time() <= delay:
+                    if event_time - time.time() >= delay:
                         GPIO.output(pin, state)
                         to_remove.append(i)
                 
                 for i in reversed(to_remove):
-                    print(len(self.note_queue), i)
                     del self.note_queue[i]
         
         self.working = True
