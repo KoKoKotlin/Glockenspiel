@@ -8,6 +8,8 @@ from statistics import median
 
 import threading
 
+from server_handler import MidiServerHandler
+
 def find_note_minimum(track, channel):
     return median(
         map(lambda x: x.note, 
@@ -101,14 +103,20 @@ class Glockenspiel:
         self.midi = midi
         self.channel = channel
 
+        self.events = []
+
         if self.midi != None and offset == None:
             self.offset = get_note_offset(self.midi, self.channel)
+            self.events = midi
         else:
             self.offset = offset
 
         self.note_queue = []
         self.working = False
         self.song_thread = None
+
+        self.start_time = time.time()
+        self.input_time = 0.0
 
     def init(self):
         # enable gpio pins
@@ -146,14 +154,14 @@ class Glockenspiel:
             print("Not started yet!")
             return
 
-        start_time = time.time()
-        input_time = 0.0
+        self.play_timed_events()
 
-        for event in self.midi:
-            input_time += event.time
+    def play_timed_events(self):
+        for event in self.events:
+            self.input_time += event.time
 
-            playback_time = time.time() - start_time
-            duration_to_next_event = input_time - playback_time
+            playback_time = time.time() - self.start_time
+            duration_to_next_event = self.input_time - playback_time
 
             if duration_to_next_event > 0.0:
                 time.sleep(duration_to_next_event)
@@ -171,6 +179,7 @@ class Glockenspiel:
                         duration = self.durations[pin]
                         self.note_queue.append((time.time(), duration, pin))
     
+
     def getPinFromNoteId(self, note_id):
         pin = note_id - self.offset
 
@@ -201,4 +210,12 @@ class Glockenspiel:
             sleep(self.NOTE_COOLDOWN)
 
     def start_server(self):
-        
+        server_handler = MidiServerHandler(self)
+        server_handler.start_server()
+
+
+        if not self.working:
+            self.start_worker()
+
+        while(True):
+            self.play_timed_events() # play everything that is in the queue
