@@ -199,3 +199,6 @@ class Glockenspiel:
                     self.note_queue.append(keys.index(key))
                 except: continue
             sleep(self.NOTE_COOLDOWN)
+
+    def start_server(self):
+        
