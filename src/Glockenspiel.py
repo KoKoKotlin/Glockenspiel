@@ -104,10 +104,10 @@ class Glockenspiel:
         self.channel = channel
 
         self.events = []
-
+        
         if self.midi != None and offset == None:
             self.offset = get_note_offset(self.midi, self.channel)
-            self.events = midi
+            self.events = self.midi
         else:
             self.offset = offset
 
@@ -154,7 +154,17 @@ class Glockenspiel:
             print("Not started yet!")
             return
 
+        self.events = self.midi
         self.play_timed_events()
+
+    def _queue_note(self, note_id):                
+        # set pin low immediately
+        pin = self.getPinFromNoteId(note_id)
+        GPIO.output(pin, GPIO.LOW)
+        
+        # schedule setting the pin high again
+        duration = self.durations[pin]
+        self.note_queue.append((time.time(), duration, pin))
 
     def play_timed_events(self):
         for event in self.events:
@@ -170,15 +180,7 @@ class Glockenspiel:
                 if event.type == "note_on":
                     if self.channel == None or \
                        self.channel != None and event.channel == self.channel:
-                        
-                        # set pin low immediately
-                        pin = self.getPinFromNoteId(event.note)
-                        GPIO.output(pin, GPIO.LOW)
-                        
-                        # schedule setting the pin high again
-                        duration = self.durations[pin]
-                        self.note_queue.append((time.time(), duration, pin))
-    
+                        _queue_note(event.note)
 
     def getPinFromNoteId(self, note_id):
         pin = note_id - self.offset
@@ -213,9 +215,5 @@ class Glockenspiel:
         server_handler = MidiServerHandler(self)
         server_handler.start_server()
 
-
         if not self.working:
             self.start_worker()
-
-        while(True):
-            self.play_timed_events() # play everything that is in the queue

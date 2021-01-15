@@ -1,4 +1,5 @@
 from pymidi import server
+from pprint import pprint
 
 import threading
 
@@ -29,7 +30,11 @@ class MidiServerHandler(server.Handler):
         self.debug_print(f"Peer disconnected {peer}!")
 
     def on_midi_commands(self, peer, command_list):
-        self.glockenspiel.events += command_list
+        for command in command_list:
+            pprint(command.command)
+        
+        if self.glockenspiel.channel == None or self.glockenspiel.channel == int(command.channel):
+            pass # self.glockenspiel._queue_note(0)
 
     def debug_print(self, msg):
-        print(f"[SERVER] {msg}")
+        pprint(f"[SERVER] {msg}")

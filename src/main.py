@@ -4,24 +4,39 @@ import mido
 
 import RPi.GPIO as GPIO
 
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("file", help="The filepath of a midi file that should be played back.", type=str, nargs="?")
+parser.add_argument("-m", "--manuel", help="Start the program in manuel mode.", action="store_true")
+parser.add_argument("-s", "--server", help="Start a midi server at port 5051.", action="store_true")
+parser.add_argument("-c", "--channel", help="Channel that should be played back [by default -> all channels].", type=int)
+parser.add_argument("-o", "--offset", help="Base note offset.", type=int)
+
 def main():
     
-
-    if len(sys.argv) == 1:
+    args = parser.parse_args()
+    
+    if args.manuel:
         gl = Glockenspiel()
         gl.init()
         gl.start_worker()
         gl.manuel_mode()
+    elif args.server:
+        gl = Glockenspiel(offset=args.offset)
+        gl.init()
+        gl.start_worker()
+        gl.start_server()
     else:
-        fileName = sys.argv[1]
+        fileName = args.file
         
         channel = None
-        if len(sys.argv) > 2:
-            channel = int(sys.argv[2])
+        if args.channel:
+            channel = args.channel
 
         offset = None
-        if len(sys.argv) > 3:
-            offset = int(sys.argv[3])
+        if args.offset:
+            offset = args.offset
 
         midi = mido.MidiFile(fileName)
         gl = Glockenspiel(midi, channel, offset)
