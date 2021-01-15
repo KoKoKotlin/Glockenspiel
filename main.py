@@ -16,7 +16,7 @@ def main():
         fileName = sys.argv[1]
         
         channel = None
-        if len(sys.argv) == 3:
+        if len(sys.argv) > 2:
             channel = int(sys.argv[2])
 
         offset = None
