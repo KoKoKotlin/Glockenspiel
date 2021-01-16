@@ -8,8 +8,6 @@ from statistics import median
 
 import threading
 
-from server_handler import MidiServerHandler
-
 def find_note_minimum(track, channel):
     return median(
         map(lambda x: x.note, 
@@ -68,11 +66,11 @@ class Glockenspiel:
     
     durations = {
         # 1st octave
-        G1: 0.02, G1_S: 0.02, A1: 0.02, A1_S: 0.02, B1: 0.02, 
+        G1: 0.024, G1_S: 0.024, A1: 0.024, A1_S: 0.024, B1: 0.024, 
         # 2nd octave
-        C2: 0.03, C2_S: 0.02, D2: 0.02, D2_S: 0.02, E2: 0.02, F2: 0.02, F2_S: 0.02, G2: 0.02, G2_S: 0.02, A2: 0.03, A2_S: 0.02, B2: 0.02, 
+        C2: 0.024, C2_S: 0.024, D2: 0.024, D2_S: 0.024, E2: 0.024, F2: 0.024, F2_S: 0.024, G2: 0.024, G2_S: 0.024, A2: 0.024, A2_S: 0.024, B2: 0.024, 
         # 3rd ocvtave
-        C3: 0.02, C3_S: 0.02, D3: 0.02, D3_S: 0.02, E3: 0.02, F3: 0.02, F3_S: 0.02, G3: 0.02
+        C3: 0.024, C3_S: 0.024, D3: 0.024, D3_S: 0.024, E3: 0.024, F3: 0.024, F3_S: 0.024, G3: 0.024
     }
 
     # when played together play with longer duration for the same velocity
@@ -210,10 +208,3 @@ class Glockenspiel:
                     self.note_queue.append(keys.index(key))
                 except: continue
             sleep(self.NOTE_COOLDOWN)
-
-    def start_server(self):
-        server_handler = MidiServerHandler(self)
-        server_handler.start_server()
-
-        if not self.working:
-            self.start_worker()

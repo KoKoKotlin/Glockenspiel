@@ -4,7 +4,8 @@ from pprint import pprint
 import threading
 
 class MidiServerHandler(server.Handler):
-
+    NOTE_ON = 144
+    
     def __init__(self, glockenspiel):
         self.msgs = []
         self.server_thread = None
@@ -15,6 +16,7 @@ class MidiServerHandler(server.Handler):
     def start_server(self):
 
         def task():
+            self.glockenspiel.init()
             s = server.Server([("0.0.0.0", 5051)])
             s.add_handler(self)
             s.serve_forever()
@@ -31,10 +33,9 @@ class MidiServerHandler(server.Handler):
 
     def on_midi_commands(self, peer, command_list):
         for command in command_list:
-            pprint(command.command)
-        
-        if self.glockenspiel.channel == None or self.glockenspiel.channel == int(command.channel):
-            pass # self.glockenspiel._queue_note(0)
+            if int(command.command) == self.NOTE_ON:
+                if self.glockenspiel.channel == None or self.glockenspiel.channel == command.channel:
+                    self.glockenspiel._queue_note(int(command.params.key))
 
     def debug_print(self, msg):
         pprint(f"[SERVER] {msg}")

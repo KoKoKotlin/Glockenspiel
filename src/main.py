@@ -1,9 +1,10 @@
 from Glockenspiel import Glockenspiel
+from server_handler import MidiServerHandler
+
 import sys
 import mido
 
 import RPi.GPIO as GPIO
-
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -26,7 +27,8 @@ def main():
         gl = Glockenspiel(offset=args.offset)
         gl.init()
         gl.start_worker()
-        gl.start_server()
+        server_handler = MidiServerHandler(gl)
+        server_handler.start_server()
     else:
         fileName = args.file
         
@@ -50,4 +52,3 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         pass
-    GPIO.cleanup()
