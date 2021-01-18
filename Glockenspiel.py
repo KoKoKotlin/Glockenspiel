@@ -9,8 +9,6 @@ from statistics import median
 import threading
 
 def find_note_minimum(track, channel):
-    if not track: return 0
-
     return median(
         map(lambda x: x.note, 
             filter(lambda x: not x.is_meta and x.type == "note_on" and (channel == None or channel != None and x.channel == channel), 
@@ -70,30 +68,35 @@ class Glockenspiel:
         # 1st octave
         G1: 0.02, G1_S: 0.02, A1: 0.02, A1_S: 0.02, B1: 0.02, 
         # 2nd octave
-        C2: 0.02, C2_S: 0.02, D2: 0.02, D2_S: 0.02, E2: 0.02, F2: 0.02, F2_S: 0.02, G2: 0.02, G2_S: 0.02, A2: 0.02, A2_S: 0.02, B2: 0.02, 
+        C2: 0.03, C2_S: 0.02, D2: 0.02, D2_S: 0.02, E2: 0.02, F2: 0.02, F2_S: 0.02, G2: 0.02, G2_S: 0.02, A2: 0.03, A2_S: 0.02, B2: 0.02, 
         # 3rd ocvtave
         C3: 0.02, C3_S: 0.02, D3: 0.02, D3_S: 0.02, E3: 0.02, F3: 0.02, F3_S: 0.02, G3: 0.02
     }
+
+    # for manuel mode
+    keys = [
+        "a", "w", "s", "e", "d",
+        "f", "t", "g", "z", "h", "j", "i", "k", "o", "l", "p", "y", 
+        "x", "c", "v", "b", "n", "m", ",", "."
+    ]
+
+
+    # for manuel mode
+    NOTE_COOLDOWN = 0.02
 
     def __init__(self, midi=None, channel=None, offset=None):
         self.last_note = 0
         self.midi = midi
         self.channel = channel
 
-        self.events = []
-        
         if self.midi != None and offset == None:
             self.offset = get_note_offset(self.midi, self.channel)
-            self.events = self.midi
         else:
             self.offset = offset
 
         self.note_queue = []
         self.working = False
         self.song_thread = None
-
-        self.start_time = time.time()
-        self.input_time = 0.0
 
     def init(self):
         # enable gpio pins
@@ -131,24 +134,14 @@ class Glockenspiel:
             print("Not started yet!")
             return
 
-        self.events = self.midi
-        self.play_timed_events()
+        start_time = time.time()
+        input_time = 0.0
 
-    def _queue_note(self, note_id):                
-        # set pin low immediately
-        pin = self.getPinFromNoteId(note_id)
-        GPIO.output(pin, GPIO.LOW)
-        
-        # schedule setting the pin high again
-        duration = self.durations[pin]
-        self.note_queue.append((time.time(), duration, pin))
+        for event in self.midi:
+            input_time += event.time
 
-    def play_timed_events(self):
-        for event in self.events:
-            self.input_time += event.time
-
-            playback_time = time.time() - self.start_time
-            duration_to_next_event = self.input_time - playback_time
+            playback_time = time.time() - start_time
+            duration_to_next_event = input_time - playback_time
 
             if duration_to_next_event > 0.0:
                 time.sleep(duration_to_next_event)
@@ -157,8 +150,15 @@ class Glockenspiel:
                 if event.type == "note_on":
                     if self.channel == None or \
                        self.channel != None and event.channel == self.channel:
-                        _queue_note(event.note)
-
+                        
+                        # set pin low immediately
+                        pin = self.getPinFromNoteId(event.note)
+                        GPIO.output(pin, GPIO.LOW)
+                        
+                        # schedule setting the pin high again
+                        duration = self.durations[pin]
+                        self.note_queue.append((time.time(), duration, pin))
+    
     def getPinFromNoteId(self, note_id):
         pin = note_id - self.offset
 
@@ -170,3 +170,20 @@ class Glockenspiel:
 
         return self.note_array[pin]
 
+    def manuel_mode(self):
+        def get_press(stdscr):
+            stdscr.nodelay(True)
+            return stdscr.getch()
+        
+        if not self.working:
+            print("Not started yet!")
+            return
+        
+        while True:
+            key = curses.wrapper(get_press)
+            if key != -1:
+                key = chr(key)
+                try:
+                    self.note_queue.append(keys.index(key))
+                except: continue
+            sleep(self.NOTE_COOLDOWN)
